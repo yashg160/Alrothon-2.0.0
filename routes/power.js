@@ -58,11 +58,33 @@ router.post('/device/add', async function (req, res) {
 });
 
 
-outer.get('/', async function (req, res) {
+router.get('/', async function (req, res) {
     var populateQuery = [{ path: 'deviceId', select: ['deviceId', 'deviceName', 'userId'] }];
 
     try {
         const allData = await Power.find({}).populate(populateQuery).lean();
+        return res.json({
+            status: true,
+            data: allData,
+            err: {},
+            msg: "Data fetched successfully.",
+        });
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            status: false,
+            data: {},
+            err,
+            msg: "Unable to fetch Data.",
+        });
+    }
+});
+
+router.get('/:id', async function (req, res) {
+    var populateQuery = [{ path: 'deviceId', select: ['deviceId', 'deviceName', 'userId'] }];
+
+    try {
+        const allData = await Power.find({ deviceId: req.params.id }).populate(populateQuery).lean();
         return res.json({
             status: true,
             data: allData,
