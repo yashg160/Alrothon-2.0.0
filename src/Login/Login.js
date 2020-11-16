@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Input, Button, Checkbox } from "antd";
+import { Form, Input, Button } from "antd";
 import "./Login.css";
 const layout = {
   labelCol: {
@@ -63,10 +63,9 @@ const Login = () => {
           >
             <Input.Password />
           </Form.Item>
-
           <Form.Item {...tailLayout}>
-            <Button type="primary" shape="round">
-              LOGIN
+            <Button type="primary" shape="round" htmlType="submit">
+              Login
             </Button>
           </Form.Item>
         </Form>
