@@ -63,9 +63,10 @@ const Login = () => {
           >
             <Input.Password />
           </Form.Item>
+
           <Form.Item {...tailLayout}>
             <Button type="primary" shape="round" htmlType="submit">
-              Login
+              LOGIN
             </Button>
           </Form.Item>
         </Form>
