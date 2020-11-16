@@ -8,15 +8,18 @@ import { ConfigureStore } from "./redux/store";
 import Threshold from "./Threshold/Threshold";
 
 function App() {
-  return (
-    <Router>
-      <Switch>
-        <Route exact path="/" component={Login} />
-        <Route exact path="/dashboard" component={Dashboard} />
-        <Route exact path="/threshold" component={Threshold} />
-      </Switch>
-    </Router>
-  );
+	const store = ConfigureStore();
+	return (
+		<Provider store={store}>
+			<Router>
+				<Switch>
+					<Route exact path="/" component={Login} />
+					<Route exact path="/dashboard" component={Dashboard} />
+					<Route exact path="/threshold" component={Threshold} />
+				</Switch>
+			</Router>
+		</Provider>
+	);
 }
 
 export default App;
