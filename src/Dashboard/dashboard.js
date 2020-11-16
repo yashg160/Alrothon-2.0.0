@@ -8,7 +8,7 @@ export default function Dashboard({ history }) {
 		<React.Fragment>
 			<PageHeader
 				className="site-page-header-responsive"
-				onBack={() => history.back()}
+				onBack={() => history.goBack()}
 				title="Dashboard"
 				subTitle="Stats At A Glance"
 				extra={[<Button key="1">Log Out</Button>]}
