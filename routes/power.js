@@ -58,5 +58,63 @@ router.post('/device/add', async function (req, res) {
 });
 
 
+outer.get('/', async function (req, res) {
+    var populateQuery = [{ path: 'deviceId', select: ['deviceId', 'deviceName', 'userId'] }];
+
+    try {
+        const allData = await Power.find({}).populate(populateQuery).lean();
+        return res.json({
+            status: true,
+            data: allData,
+            err: {},
+            msg: "Data fetched successfully.",
+        });
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            status: false,
+            data: {},
+            err,
+            msg: "Unable to fetch Data.",
+        });
+    }
+});
+
+router.post('/add', async function (req, res) {
+    const {
+        deviceId,
+        energyConsumed,
+        longitude,
+        latitude,
+        battery
+    } = req.body;
+
+    try {
+        var newData = new Power({
+            deviceId: deviceId,
+            energyConsumed: energyConsumed,
+            longitude: longitude,
+            latitude: latitude,
+            battery: battery
+        })
+        console.log(newData)
+        newData.save();
+        return res.json({
+            status: true,
+            data: newData,
+            err: {},
+            msg: "Data added successfully.",
+        });
+    } catch {
+        return res.json({
+            status: false,
+            data: {},
+            err,
+            msg: "Unable to add data.",
+        });
+    }
+});
+
+
 
 module.exports = router;
