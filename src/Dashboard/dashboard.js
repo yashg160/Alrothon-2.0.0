@@ -8,11 +8,14 @@ import {
 	Card,
 	Typography,
 } from "antd";
+import { Line } from "react-chartjs-2";
+import { fetchUsageData } from "../redux/ActionCreators";
+import { connect } from "react-redux";
 
 const { TabPane } = Tabs;
 const { Title, Text } = Typography;
 
-export default function Dashboard({ history }) {
+function Dashboard({ history, usage, fetchUsageData }) {
 	const [active, setActive] = useState("devices");
 
 	return (
@@ -36,7 +39,89 @@ export default function Dashboard({ history }) {
 			</PageHeader>
 			{active === "devices" ? (
 				<DevicesContent />
-			) : active === "usage" ? null : null}
+			) : active === "usage" ? (
+				<UsageContent usage={usage} fetchData={fetchUsageData} />
+			) : null}
+		</React.Fragment>
+	);
+}
+
+const mapStateToProps = (state) => ({
+	usage: state.usage,
+});
+
+export default connect(mapStateToProps, { fetchUsageData })(Dashboard);
+
+function UsageContent({ fetchData, usage }) {
+	const [state, setState] = useState({ chartData: null });
+	useEffect(() => {
+		fetchData();
+	}, []);
+
+	useEffect(() => {
+		let chartValues = [],
+			labels = [],
+			iteration = 1,
+			lastHourPower = 0;
+		if (!usage.loading) {
+			for (const stamp of usage.data) {
+				lastHourPower += stamp.energyConsumed;
+				if (iteration % 12 === 0) {
+					chartValues.push(lastHourPower.toFixed(2));
+					labels.push(labels.length + 1);
+					lastHourPower = 0;
+				}
+				iteration++;
+			}
+
+			const maxLine = Array(chartValues.length).fill(70);
+			const data = {
+				labels: labels,
+				datasets: [
+					{
+						label: "Total Consumed Power",
+						data: chartValues,
+						fill: true,
+						backgroundColor: "rgba(34, 40,49, 0.2)",
+						borderColor: "rgb(34, 40, 49)",
+					},
+					{
+						label: "Maximum Set Threshold",
+						data: maxLine,
+						fill: true,
+						backgroundColor: "rgba(255, 0,0, 0)",
+						borderColor: "rgb(255, 0, 0)",
+					},
+				],
+			};
+			setState({ ...state, chartData: data });
+		}
+	}, [usage]);
+
+	if (usage.loading) return null;
+	return (
+		<React.Fragment>
+			<Card style={{ width: 800, width: 800 }}>
+				<Line
+					data={state.chartData}
+					options={{
+						title: {
+							text: "Total Power Consumed Over Hours",
+							display: true,
+							fullWidth: true,
+						},
+						maintainAspectRatio: true,
+						legend: {
+							fullWidth: true,
+							align: "center",
+						},
+						scales: {
+							gridLines: false,
+							unitStepSize: 1,
+						},
+					}}
+				/>
+			</Card>
 		</React.Fragment>
 	);
 }
