@@ -11,7 +11,17 @@ class Threshold extends Component {
     return (
       <div className="Threshold-center">
         <div className="site-card-wrapper">
-          <Card title="Threshold Power Consumption" bordered={false}>
+          <Card
+            title="Threshold Power Consumption"
+            bordered={false}
+            bodyStyle={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              fontSize: "16px",
+            }}
+          >
             <div className="Value-inline">
               <p>Enter The New Threshold Value</p>
               <InputNumber
