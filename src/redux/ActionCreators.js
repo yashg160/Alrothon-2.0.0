@@ -15,3 +15,10 @@ export const fetchUsageData = () => (dispatch) => {
 			});
 		});
 };
+
+export const updateThreshold = (thresh) => (dispatch) => {
+	dispatch({
+		type: ActionTypes.UPDATE_THRESHOLD,
+		payload: thresh,
+	});
+};
