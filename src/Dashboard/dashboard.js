@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { PageHeader, Tabs, Button, Statistic, Descriptions } from "antd";
+import {
+	PageHeader,
+	Tabs,
+	Button,
+	Statistic,
+	Descriptions,
+	Card,
+	Typography,
+} from "antd";
 
 const { TabPane } = Tabs;
+const { Title, Text } = Typography;
 
 export default function Dashboard({ history }) {
-	const [state, setState] = useState({ loading: false, data: null });
+	const [active, setActive] = useState("devices");
 
-	useEffect(() => {
-		getDevices();
-	}, []);
-
-	async function getDevices() {
-		const rawResponse = await fetch("http://localhost:5000/power/devices");
-		const response = await rawResponse.json();
-		console.log(response);
-	}
 	return (
 		<React.Fragment>
 			<PageHeader
@@ -24,14 +24,57 @@ export default function Dashboard({ history }) {
 				subTitle="Stats At A Glance"
 				extra={[<Button key="1">Log Out</Button>]}
 				footer={
-					<Tabs defaultActiveKey="1" animated>
-						<TabPane tab="Details" key="1" />
-						<TabPane tab="Rule" key="2" />
+					<Tabs
+						defaultActiveKey="devices"
+						animated
+						onChange={(activeKey) => setActive(activeKey)}>
+						<TabPane tab="Devices" key="devices" />
+						<TabPane tab="Usage" key="usage" />
 					</Tabs>
 				}>
 				<Content extra={extraContent}>{renderContent()}</Content>
 			</PageHeader>
+			{active === "devices" ? (
+				<DevicesContent />
+			) : active === "usage" ? null : null}
 		</React.Fragment>
+	);
+}
+
+function DevicesContent({}) {
+	const [state, setState] = useState({ loading: false, devices: [] });
+	useEffect(() => {
+		getDevices();
+	}, []);
+
+	async function getDevices() {
+		setState({ ...state, loading: true });
+		const rawResponse = await fetch("http://localhost:5000/power/devices");
+		const response = await rawResponse.json();
+		console.log(response);
+		setState({ ...state, devices: response.data, loading: false });
+	}
+
+	if (state.loading) return null;
+	return (
+		<Card title="Your Devices">
+			{state.devices.map((device) => (
+				<Card
+					type="inner"
+					title={<Title level={5}>{device.deviceName}</Title>}
+					extra={<a href="#">Device Usage</a>}>
+					<Text>
+						Updated At {new Date(device.updatedAt).toString()}
+					</Text>
+					<br />
+					<Text>
+						Device Added {new Date(device.createdAt).toString()}
+					</Text>
+					<br />
+					<Text disabled>Device ID {device.deviceId}</Text>
+				</Card>
+			))}
+		</Card>
 	);
 }
 
