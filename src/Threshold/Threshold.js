@@ -5,11 +5,9 @@ class Threshold extends Component {
   state = {
     ThresholdValue: "",
   };
-  onChange(value) {
-    console.log("changed", value);
-  }
 
   render() {
+    console.log(this.state);
     return (
       <div className="Threshold-center">
         <div className="site-card-wrapper">
@@ -20,7 +18,7 @@ class Threshold extends Component {
                 min={0}
                 max={100}
                 defaultValue={0}
-                onChange={this.onChange}
+                onChange={(value) => this.setState({ ThresholdValue: value })}
               />
             </div>
             <br />
