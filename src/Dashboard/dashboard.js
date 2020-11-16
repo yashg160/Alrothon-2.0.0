@@ -7,6 +7,7 @@ import {
 	Descriptions,
 	Card,
 	Typography,
+	Table,
 } from "antd";
 import { Line } from "react-chartjs-2";
 import { fetchUsageData } from "../redux/ActionCreators";
@@ -53,7 +54,7 @@ const mapStateToProps = (state) => ({
 export default connect(mapStateToProps, { fetchUsageData })(Dashboard);
 
 function UsageContent({ fetchData, usage }) {
-	const [state, setState] = useState({ chartData: null });
+	const [state, setState] = useState({ chartData: null, tableData: [] });
 	useEffect(() => {
 		fetchData();
 	}, []);
@@ -94,14 +95,35 @@ function UsageContent({ fetchData, usage }) {
 					},
 				],
 			};
-			setState({ ...state, chartData: data });
+			// Create table data
+			let tableData = [];
+			for (let i = 0; i < chartValues.length; i++) {
+				tableData.push({
+					power: chartValues[i],
+					hours: labels[i],
+				});
+			}
+			setState({ ...state, tableData: tableData, chartData: data });
 		}
 	}, [usage]);
+
+	const tableColumns = [
+		{
+			title: "Power Consumed",
+			dataIndex: "power",
+			key: "power",
+		},
+		{
+			title: "Hour",
+			dataIndex: "hours",
+			key: "hours",
+		},
+	];
 
 	if (usage.loading) return null;
 	return (
 		<React.Fragment>
-			<Card style={{ width: 800, width: 800 }}>
+			<Card style={{ width: "100%", height: 300 }}>
 				<Line
 					data={state.chartData}
 					options={{
@@ -110,7 +132,7 @@ function UsageContent({ fetchData, usage }) {
 							display: true,
 							fullWidth: true,
 						},
-						maintainAspectRatio: true,
+						maintainAspectRatio: false,
 						legend: {
 							fullWidth: true,
 							align: "center",
@@ -120,6 +142,14 @@ function UsageContent({ fetchData, usage }) {
 							unitStepSize: 1,
 						},
 					}}
+					height={300}
+				/>
+			</Card>
+			<Card style={{ width: "100%", height: 300 }}>
+				<Table
+					dataSource={state.tableData}
+					columns={tableColumns}
+					pagination={{ position: ["topCenter", "bottomCenter"] }}
 				/>
 			</Card>
 		</React.Fragment>
