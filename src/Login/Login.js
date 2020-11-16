@@ -22,7 +22,6 @@ const Login = ({ history }) => {
 		console.log("Success:", values);
 		setName(values.username);
 		setPassword(values.password);
-		console.log(name, password);
 		history.push("/dashboard");
 	};
 
