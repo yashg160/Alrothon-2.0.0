@@ -1,9 +1,20 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { PageHeader, Tabs, Button, Statistic, Descriptions } from "antd";
 
 const { TabPane } = Tabs;
 
 export default function Dashboard({ history }) {
+	const [state, setState] = useState({ loading: false, data: null });
+
+	useEffect(() => {
+		getDevices();
+	}, []);
+
+	async function getDevices() {
+		const rawResponse = await fetch("http://localhost:5000/power/devices");
+		const response = await rawResponse.json();
+		console.log(response);
+	}
 	return (
 		<React.Fragment>
 			<PageHeader
