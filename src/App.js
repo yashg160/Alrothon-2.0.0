@@ -5,20 +5,18 @@ import Dashboard from "./Dashboard/dashboard";
 import "antd/dist/antd.css";
 import { Provider } from "react-redux";
 import { ConfigureStore } from "./redux/store";
+import Threshold from "./Threshold/Threshold";
 
 function App() {
-	const store = ConfigureStore();
-	console.log(store);
-	return (
-		<Provider store={store}>
-			<Router>
-				<Switch>
-					<Route exact path="/" component={Login} />
-					<Route exact path="/dashboard" component={Dashboard} />
-				</Switch>
-			</Router>
-		</Provider>
-	);
+  return (
+    <Router>
+      <Switch>
+        <Route exact path="/" component={Login} />
+        <Route exact path="/dashboard" component={Dashboard} />
+        <Route exact path="/threshold" component={Threshold} />
+      </Switch>
+    </Router>
+  );
 }
 
 export default App;
