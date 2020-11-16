@@ -1,13 +1,19 @@
 import React, { Component } from "react";
 import { Card, InputNumber, Button } from "antd";
 import "./Threshold.css";
+import { updateThreshold } from "../redux/ActionCreators";
+import { connect } from "react-redux";
 class Threshold extends Component {
-  state = {
-    ThresholdValue: "",
-  };
 
+	constructor(props) {
+		super(props);
+	}
+	onChange(value) {
+		this.props.updateThreshold(value);
+	}
+  
   render() {
-    console.log(this.state);
+
     return (
       <div className="Threshold-center">
         <div className="site-card-wrapper">
@@ -27,20 +33,24 @@ class Threshold extends Component {
               <InputNumber
                 min={0}
                 max={100}
-                defaultValue={0}
-                onChange={(value) => this.setState({ ThresholdValue: value })}
+                defaultValue={this.props.threshold.threshold}
+								onChange={(value) => this.onChange(value)}
               />
             </div>
             <br />
-
-            <Button type="primary" shape="" htmlType="submit">
-              UPDATE
-            </Button>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+                
+						<Button type="primary" shape="" htmlType="submit">
+							UPDATE
+						</Button>
+					</Card>
+				</div>
+			</div>
+		);
+	}
 }
 
-export default Threshold;
+const mapStateToProps = (state) => ({
+	threshold: state.threshold,
+});
+
+export default connect(mapStateToProps, { updateThreshold })(Threshold);
