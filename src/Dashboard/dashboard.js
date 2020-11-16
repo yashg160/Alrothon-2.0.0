@@ -12,6 +12,8 @@ import {
 import { Line } from "react-chartjs-2";
 import { fetchUsageData } from "../redux/ActionCreators";
 import { connect } from "react-redux";
+import * as FileSaver from "file-saver";
+import * as XLSX from "xlsx";
 
 const { TabPane } = Tabs;
 const { Title, Text } = Typography;
@@ -54,7 +56,11 @@ const mapStateToProps = (state) => ({
 export default connect(mapStateToProps, { fetchUsageData })(Dashboard);
 
 function UsageContent({ fetchData, usage }) {
-	const [state, setState] = useState({ chartData: null, tableData: [] });
+	const [state, setState] = useState({
+		chartData: null,
+		tableData: [],
+		savingData: false,
+	});
 	useEffect(() => {
 		fetchData();
 	}, []);
@@ -107,6 +113,20 @@ function UsageContent({ fetchData, usage }) {
 		}
 	}, [usage]);
 
+	function saveData() {
+		const ws = XLSX.utils.json_to_sheet(state.tableData);
+		const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+		const excelBuffer = XLSX.write(wb, {
+			bookType: "xlsx",
+			type: "array",
+		});
+		const data = new Blob([excelBuffer], {
+			type:
+				"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+		});
+		FileSaver.saveAs(data, "data.xlsx");
+	}
+
 	const tableColumns = [
 		{
 			title: "Power Consumed",
@@ -117,6 +137,7 @@ function UsageContent({ fetchData, usage }) {
 			title: "Hour",
 			dataIndex: "hours",
 			key: "hours",
+			render: (text) => <Text disabled>{text}</Text>,
 		},
 	];
 
@@ -145,13 +166,19 @@ function UsageContent({ fetchData, usage }) {
 					height={300}
 				/>
 			</Card>
-			<Card style={{ width: "100%", height: 300 }}>
+			<Card style={{ width: "100%", height: 200 }}>
 				<Table
 					dataSource={state.tableData}
 					columns={tableColumns}
 					pagination={{ position: ["topCenter", "bottomCenter"] }}
 				/>
 			</Card>
+			<Button
+				type="primary"
+				onClick={() => saveData()}
+				disabled={state.savingData}>
+				Download Data
+			</Button>
 		</React.Fragment>
 	);
 }
