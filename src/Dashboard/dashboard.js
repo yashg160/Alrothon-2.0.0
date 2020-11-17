@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { LeftCircleFilled } from '@ant-design/icons';
 import {
 	PageHeader,
 	Tabs,
@@ -41,7 +42,7 @@ function Dashboard({ history, usage, fetchUsageData }) {
 				<Content extra={extraContent}>{renderContent()}</Content>
 			</PageHeader>
 			{active === "devices" ? (
-				<DevicesContent />
+				<DevicesContent usage={usage} fetchData={fetchUsageData} />
 			) : active === "usage" ? (
 				<UsageContent usage={usage} fetchData={fetchUsageData} />
 			) : null}
@@ -166,6 +167,13 @@ function UsageContent({ fetchData, usage }) {
 					height={300}
 				/>
 			</Card>
+			<Card><Button
+				style={{ alignContent: 'right' }}
+				type="primary"
+				onClick={() => saveData()}
+				disabled={state.savingData}>
+				Download Data
+			</Button></Card>
 			<Card style={{ width: "100%", height: 200 }}>
 				<Table
 					dataSource={state.tableData}
@@ -173,21 +181,157 @@ function UsageContent({ fetchData, usage }) {
 					pagination={{ position: ["topCenter", "bottomCenter"] }}
 				/>
 			</Card>
-			<Button
-				type="primary"
-				onClick={() => saveData()}
-				disabled={state.savingData}>
-				Download Data
-			</Button>
+
 		</React.Fragment>
 	);
 }
 
-function DevicesContent({ }) {
+function DeviceUsageContent({ device, id, fetchData, usage }) {
+	console.log(device)
+	const [state, setState] = useState({
+		chartData: null,
+		tableData: [],
+		savingData: false,
+	});
+	useEffect(() => {
+		fetchData();
+	}, []);
+
+	useEffect(() => {
+		let chartValues = [],
+			labels = [],
+			iteration = 1,
+			lastHourPower = 0;
+		if (!usage.loading) {
+			for (const stamp of usage.data) {
+				// console.log(stamp)
+				if (stamp.deviceId._id == id) {
+
+					lastHourPower += stamp.energyConsumed;
+					if (iteration % 12 === 0) {
+						chartValues.push(lastHourPower.toFixed(2));
+						labels.push(labels.length + 1);
+						lastHourPower = 0;
+					}
+					iteration++;
+				}
+
+			}
+
+			const maxLine = Array(chartValues.length).fill(70);
+			const data = {
+				labels: labels,
+				datasets: [
+					{
+						label: "Total Consumed Power",
+						data: chartValues,
+						fill: true,
+						backgroundColor: "rgba(34, 40,49, 0.2)",
+						borderColor: "rgb(34, 40, 49)",
+					},
+					{
+						label: "Maximum Set Threshold",
+						data: maxLine,
+						fill: true,
+						backgroundColor: "rgba(255, 0,0, 0)",
+						borderColor: "rgb(255, 0, 0)",
+					},
+				],
+			};
+			// Create table data
+			let tableData = [];
+			for (let i = 0; i < chartValues.length; i++) {
+				tableData.push({
+					power: chartValues[i],
+					hours: labels[i],
+				});
+			}
+			setState({ ...state, tableData: tableData, chartData: data });
+		}
+	}, [usage]);
+
+	function saveData() {
+		const ws = XLSX.utils.json_to_sheet(state.tableData);
+		const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+		const excelBuffer = XLSX.write(wb, {
+			bookType: "xlsx",
+			type: "array",
+		});
+		const data = new Blob([excelBuffer], {
+			type:
+				"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+		});
+		FileSaver.saveAs(data, "data.xlsx");
+	}
+
+	const tableColumns = [
+		{
+			title: "Power Consumed",
+			dataIndex: "power",
+			key: "power",
+		},
+		{
+			title: "Hour",
+			dataIndex: "hours",
+			key: "hours",
+			render: (text) => <Text disabled>{text}</Text>,
+		},
+	];
+
+	if (usage.loading) return null;
+	return (
+		<React.Fragment>
+
+			<Card title={device} style={{ width: "100%", height: 500 }}>
+				<Line
+					data={state.chartData}
+					options={{
+						title: {
+							text: "Total Power Consumed Over Hours",
+							display: true,
+							fullWidth: true,
+						},
+						maintainAspectRatio: false,
+						legend: {
+							fullWidth: true,
+							align: "center",
+						},
+						scales: {
+							gridLines: false,
+							unitStepSize: 1,
+						},
+					}}
+					height={300}
+				/>
+			</Card>
+			<Card><Button
+				style={{ alignContent: 'right' }}
+				type="primary"
+				onClick={() => saveData()}
+				disabled={state.savingData}>
+				Download Data
+			</Button></Card>
+
+			<Card style={{ width: "100%", height: 200 }}>
+				<Table
+					dataSource={state.tableData}
+					columns={tableColumns}
+					pagination={{ position: ["topCenter", "bottomCenter"] }}
+				/>
+			</Card>
+
+		</React.Fragment>
+	);
+}
+
+function DevicesContent({ fetchData, usage }) {
 	const [state, setState] = useState({ loading: false, devices: [] });
+	const [active, setActive] = useState("devices");
+	const [device, setDevice] = useState('');
 	useEffect(() => {
 		getDevices();
 	}, []);
+	console.log(active)
 
 	async function getDevices() {
 		setState({ ...state, loading: true });
@@ -201,26 +345,34 @@ function DevicesContent({ }) {
 		}
 
 	}
+	async function setId(event) {
+		var id = event.target.getAttribute('data-id');
+		var device = event.target.getAttribute('data-device');
+		setActive(id)
+		setDevice(device)
+		console.log(device)
+	}
 
 	if (state.loading) return null;
 	return (
 		<Card title="Your Devices">
-			{state.devices ? state.devices.map((device) => (
-				<Card
-					type="inner"
-					title={<Title level={5}>{device.deviceName}</Title>}
-					extra={<a href="#">Device Usage</a>}>
-					<Text>
-						Updated At {new Date(device.updatedAt).toString()}
-					</Text>
-					<br />
-					<Text>
-						Device Added {new Date(device.createdAt).toString()}
-					</Text>
-					<br />
-					<Text disabled>Device ID {device.deviceId}</Text>
-				</Card>
-			)) : ''}
+			{active === 'devices' ?
+				state.devices ? state.devices.map((device) => (
+					<Card
+						type="inner"
+						title={<Title level={5}>{device.deviceName}</Title>}
+						extra={<a data-id={device._id} data-device={device.deviceName} onClick={setId}>Device Usage</a>}>
+						<Text>
+							Updated At {new Date(device.updatedAt).toString()}
+						</Text>
+						<br />
+						<Text>
+							Device Added {new Date(device.createdAt).toString()}
+						</Text>
+						<br />
+						<Text disabled>Device ID {device.deviceId}</Text>
+					</Card>
+				)) : '' : <div><LeftCircleFilled onClick={() => setActive("devices")} style={{ fontSize: '25px', paddingBottom: '20px' }} /><DeviceUsageContent device={device} id={active} usage={usage} fetchData={fetchData} /></div>}
 		</Card>
 	);
 }
