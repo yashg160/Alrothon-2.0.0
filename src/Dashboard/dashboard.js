@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LeftCircleFilled } from '@ant-design/icons';
+import { LeftCircleFilled } from "@ant-design/icons";
 import {
 	PageHeader,
 	Tabs,
@@ -9,6 +9,7 @@ import {
 	Card,
 	Typography,
 	Table,
+	message,
 } from "antd";
 import { Line } from "react-chartjs-2";
 import { fetchUsageData } from "../redux/ActionCreators";
@@ -19,8 +20,32 @@ import * as XLSX from "xlsx";
 const { TabPane } = Tabs;
 const { Title, Text } = Typography;
 
-function Dashboard({ history, usage, fetchUsageData }) {
+function Dashboard({ history, usage, fetchUsageData, threshold }) {
 	const [active, setActive] = useState("devices");
+	const [bill, setBill] = useState(0);
+	const [threshCross, setThreshCross] = useState(false);
+	function showThresholdCross() {
+		setThreshCross(true);
+		setTimeout(() => setThreshCross(false), 2000);
+	}
+
+	const extraContent = (
+		<div
+			style={{
+				display: "flex",
+				width: "max-content",
+				justifyContent: "flex-end",
+			}}>
+			<Statistic
+				title="Status"
+				value="Pending"
+				style={{
+					marginRight: 32,
+				}}
+			/>
+			<Statistic title="Bill" prefix="$" value={bill} />
+		</div>
+	);
 
 	return (
 		<React.Fragment>
@@ -29,7 +54,13 @@ function Dashboard({ history, usage, fetchUsageData }) {
 				onBack={() => history.goBack()}
 				title="Dashboard"
 				subTitle="Stats At A Glance"
-				extra={[<Button key="1">Log Out</Button>]}
+				extra={[
+					<Button
+						key="1"
+						onClick={() => window.location.replace("/")}>
+						Log Out
+					</Button>,
+				]}
 				footer={
 					<Tabs
 						defaultActiveKey="devices"
@@ -41,10 +72,21 @@ function Dashboard({ history, usage, fetchUsageData }) {
 				}>
 				<Content extra={extraContent}>{renderContent()}</Content>
 			</PageHeader>
+			{threshCross
+				? message.error(
+						"Maximum threshold crossed. Please check your power usage."
+				  )
+				: null}
 			{active === "devices" ? (
 				<DevicesContent usage={usage} fetchData={fetchUsageData} />
 			) : active === "usage" ? (
-				<UsageContent usage={usage} fetchData={fetchUsageData} />
+				<UsageContent
+					usage={usage}
+					fetchData={fetchUsageData}
+					threshold={threshold}
+					showThresholdCross={showThresholdCross}
+					setBill={(bill) => setBill(bill)}
+				/>
 			) : null}
 		</React.Fragment>
 	);
@@ -56,7 +98,13 @@ const mapStateToProps = (state) => ({
 
 export default connect(mapStateToProps, { fetchUsageData })(Dashboard);
 
-function UsageContent({ fetchData, usage }) {
+function UsageContent({
+	fetchData,
+	usage,
+	threshold,
+	showThresholdCross,
+	setBill,
+}) {
 	const [state, setState] = useState({
 		chartData: null,
 		tableData: [],
@@ -72,17 +120,20 @@ function UsageContent({ fetchData, usage }) {
 			iteration = 1,
 			lastHourPower = 0;
 		if (!usage.loading) {
+			let bill = 0;
 			for (const stamp of usage.data) {
 				lastHourPower += stamp.energyConsumed;
 				if (iteration % 12 === 0) {
+					bill = bill + lastHourPower * 1;
 					chartValues.push(lastHourPower.toFixed(2));
 					labels.push(labels.length + 1);
 					lastHourPower = 0;
 				}
 				iteration++;
+				if (lastHourPower > threshold) showThresholdCross();
 			}
-
-			const maxLine = Array(chartValues.length).fill(70);
+			setBill(bill);
+			const maxLine = Array(chartValues.length).fill(threshold);
 			const data = {
 				labels: labels,
 				datasets: [
@@ -167,13 +218,15 @@ function UsageContent({ fetchData, usage }) {
 					height={300}
 				/>
 			</Card>
-			<Card><Button
-				style={{ alignContent: 'right' }}
-				type="primary"
-				onClick={() => saveData()}
-				disabled={state.savingData}>
-				Download Data
-			</Button></Card>
+			<Card>
+				<Button
+					style={{ alignContent: "right" }}
+					type="primary"
+					onClick={() => saveData()}
+					disabled={state.savingData}>
+					Download Data
+				</Button>
+			</Card>
 			<Card style={{ width: "100%", height: 200 }}>
 				<Table
 					dataSource={state.tableData}
@@ -181,13 +234,12 @@ function UsageContent({ fetchData, usage }) {
 					pagination={{ position: ["topCenter", "bottomCenter"] }}
 				/>
 			</Card>
-
 		</React.Fragment>
 	);
 }
 
 function DeviceUsageContent({ device, id, fetchData, usage }) {
-	console.log(device)
+	console.log(device);
 	const [state, setState] = useState({
 		chartData: null,
 		tableData: [],
@@ -206,7 +258,6 @@ function DeviceUsageContent({ device, id, fetchData, usage }) {
 			for (const stamp of usage.data) {
 				// console.log(stamp)
 				if (stamp.deviceId._id == id) {
-
 					lastHourPower += stamp.energyConsumed;
 					if (iteration % 12 === 0) {
 						chartValues.push(lastHourPower.toFixed(2));
@@ -215,7 +266,6 @@ function DeviceUsageContent({ device, id, fetchData, usage }) {
 					}
 					iteration++;
 				}
-
 			}
 
 			const maxLine = Array(chartValues.length).fill(70);
@@ -281,7 +331,6 @@ function DeviceUsageContent({ device, id, fetchData, usage }) {
 	if (usage.loading) return null;
 	return (
 		<React.Fragment>
-
 			<Card title={device} style={{ width: "100%", height: 500 }}>
 				<Line
 					data={state.chartData}
@@ -304,13 +353,15 @@ function DeviceUsageContent({ device, id, fetchData, usage }) {
 					height={300}
 				/>
 			</Card>
-			<Card><Button
-				style={{ alignContent: 'right' }}
-				type="primary"
-				onClick={() => saveData()}
-				disabled={state.savingData}>
-				Download Data
-			</Button></Card>
+			<Card>
+				<Button
+					style={{ alignContent: "right" }}
+					type="primary"
+					onClick={() => saveData()}
+					disabled={state.savingData}>
+					Download Data
+				</Button>
+			</Card>
 
 			<Card style={{ width: "100%", height: 200 }}>
 				<Table
@@ -319,7 +370,6 @@ function DeviceUsageContent({ device, id, fetchData, usage }) {
 					pagination={{ position: ["topCenter", "bottomCenter"] }}
 				/>
 			</Card>
-
 		</React.Fragment>
 	);
 }
@@ -327,11 +377,11 @@ function DeviceUsageContent({ device, id, fetchData, usage }) {
 function DevicesContent({ fetchData, usage }) {
 	const [state, setState] = useState({ loading: false, devices: [] });
 	const [active, setActive] = useState("devices");
-	const [device, setDevice] = useState('');
+	const [device, setDevice] = useState("");
 	useEffect(() => {
 		getDevices();
 	}, []);
-	console.log(active)
+	console.log(active);
 
 	async function getDevices() {
 		setState({ ...state, loading: true });
@@ -343,36 +393,62 @@ function DevicesContent({ fetchData, usage }) {
 		} else {
 			setState({ ...state, devices: response.data, loading: false });
 		}
-
 	}
 	async function setId(event) {
-		var id = event.target.getAttribute('data-id');
-		var device = event.target.getAttribute('data-device');
-		setActive(id)
-		setDevice(device)
-		console.log(device)
+		var id = event.target.getAttribute("data-id");
+		var device = event.target.getAttribute("data-device");
+		setActive(id);
+		setDevice(device);
+		console.log(device);
 	}
 
 	if (state.loading) return null;
 	return (
 		<Card title="Your Devices">
-			{active === 'devices' ?
-				state.devices ? state.devices.map((device) => (
-					<Card
-						type="inner"
-						title={<Title level={5}>{device.deviceName}</Title>}
-						extra={<a data-id={device._id} data-device={device.deviceName} onClick={setId}>Device Usage</a>}>
-						<Text>
-							Updated At {new Date(device.updatedAt).toString()}
-						</Text>
-						<br />
-						<Text>
-							Device Added {new Date(device.createdAt).toString()}
-						</Text>
-						<br />
-						<Text disabled>Device ID {device.deviceId}</Text>
-					</Card>
-				)) : '' : <div><LeftCircleFilled onClick={() => setActive("devices")} style={{ fontSize: '25px', paddingBottom: '20px' }} /><DeviceUsageContent device={device} id={active} usage={usage} fetchData={fetchData} /></div>}
+			{active === "devices" ? (
+				state.devices ? (
+					state.devices.map((device) => (
+						<Card
+							type="inner"
+							title={<Title level={5}>{device.deviceName}</Title>}
+							extra={
+								<a
+									data-id={device._id}
+									data-device={device.deviceName}
+									onClick={setId}>
+									Device Usage
+								</a>
+							}>
+							<Text>
+								Updated At{" "}
+								{new Date(device.updatedAt).toString()}
+							</Text>
+							<br />
+							<Text>
+								Device Added{" "}
+								{new Date(device.createdAt).toString()}
+							</Text>
+							<br />
+							<Text disabled>Device ID {device.deviceId}</Text>
+						</Card>
+					))
+				) : (
+					""
+				)
+			) : (
+				<div>
+					<LeftCircleFilled
+						onClick={() => setActive("devices")}
+						style={{ fontSize: "25px", paddingBottom: "20px" }}
+					/>
+					<DeviceUsageContent
+						device={device}
+						id={active}
+						usage={usage}
+						fetchData={fetchData}
+					/>
+				</div>
+			)}
 		</Card>
 	);
 }
@@ -384,24 +460,6 @@ const renderContent = (column = 2) => (
 		{/* <Descriptions.Item label="Creation Time">2017-01-10</Descriptions.Item>
 		<Descriptions.Item label="Effective Time">2017-10-10</Descriptions.Item> */}
 	</Descriptions>
-);
-
-const extraContent = (
-	<div
-		style={{
-			display: "flex",
-			width: "max-content",
-			justifyContent: "flex-end",
-		}}>
-		<Statistic
-			title="Status"
-			value="Pending"
-			style={{
-				marginRight: 32,
-			}}
-		/>
-		<Statistic title="Bill" prefix="$" value={100.08} />
-	</div>
 );
 
 const Content = ({ children, extra }) => {
