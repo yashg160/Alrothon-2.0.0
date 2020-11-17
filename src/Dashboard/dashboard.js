@@ -68,6 +68,7 @@ function Dashboard({ history, usage, fetchUsageData, threshold }) {
 						onChange={(activeKey) => setActive(activeKey)}>
 						<TabPane tab="Devices" key="devices" />
 						<TabPane tab="Usage" key="usage" />
+						<TabPane tab="Last Month Bill" key="lastMonth" />
 					</Tabs>
 				}>
 				<Content extra={extraContent}>{renderContent()}</Content>
@@ -85,6 +86,12 @@ function Dashboard({ history, usage, fetchUsageData, threshold }) {
 					fetchData={fetchUsageData}
 					threshold={threshold}
 					showThresholdCross={showThresholdCross}
+					setBill={(bill) => setBill(bill)}
+				/>
+			) : active === "lastMonth" ? (
+				<LastMonthBill
+					usage={usage}
+					fetchData={fetchUsageData}
 					setBill={(bill) => setBill(bill)}
 				/>
 			) : null}
@@ -237,7 +244,90 @@ function UsageContent({
 		</React.Fragment>
 	);
 }
+function LastMonthBill({ fetchData, usage, setBill }) {
+	const [state, setState] = useState({
+		chartData: null,
+		tableData: [],
+		savingData: false,
+	});
+	useEffect(() => {
+		fetchData();
+	}, []);
 
+	useEffect(() => {
+		let chartValues = [],
+			labels = [],
+			iteration = 1,
+			lastHourPower = 0;
+		if (!usage.loading) {
+			let bill = 0;
+			for (const stamp of usage.data) {
+				const createdAt = new Date(stamp.createdAt);
+				if (createdAt.getMonth() === 9) {
+					console.log(createdAt);
+					lastHourPower += stamp.energyConsumed;
+					if (iteration % 4 === 0) {
+						bill = bill + lastHourPower * 1;
+						chartValues.push(lastHourPower.toFixed(2));
+						labels.push(labels.length + 1);
+						lastHourPower = 0;
+					}
+					iteration++;
+				}
+			}
+			setBill(bill.toFixed(2));
+			const data = {
+				labels: labels,
+				datasets: [
+					{
+						label: "Total Consumed Power",
+						data: chartValues,
+						fill: true,
+						backgroundColor: "rgba(34, 40,49, 0.2)",
+						borderColor: "rgb(34, 40, 49)",
+					},
+				],
+			};
+			// Create table data
+			let tableData = [];
+			for (let i = 0; i < chartValues.length; i++) {
+				tableData.push({
+					power: chartValues[i],
+					hours: labels[i],
+				});
+			}
+			setState({ ...state, tableData: tableData, chartData: data });
+		}
+	}, [usage]);
+
+	if (usage.loading) return null;
+	return (
+		<React.Fragment>
+			<Card style={{ width: "100%", height: 300 }}>
+				<Line
+					data={state.chartData}
+					options={{
+						title: {
+							text: "Total Power Consumed Over Hours",
+							display: true,
+							fullWidth: true,
+						},
+						maintainAspectRatio: false,
+						legend: {
+							fullWidth: true,
+							align: "center",
+						},
+						scales: {
+							gridLines: false,
+							unitStepSize: 1,
+						},
+					}}
+					height={300}
+				/>
+			</Card>
+		</React.Fragment>
+	);
+}
 function DeviceUsageContent({ device, id, fetchData, usage }) {
 	console.log(device);
 	const [state, setState] = useState({
