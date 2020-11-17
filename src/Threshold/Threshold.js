@@ -4,42 +4,50 @@ import "./Threshold.css";
 import { updateThreshold } from "../redux/ActionCreators";
 import { connect } from "react-redux";
 class Threshold extends Component {
-
 	constructor(props) {
 		super(props);
+		this.state = {
+			threshold: 100,
+		};
 	}
 	onChange(value) {
-		this.props.updateThreshold(value);
+		console.log(value);
+		this.setState({ threshold: value });
 	}
-  
-  render() {
 
-    return (
-      <div className="Threshold-center">
-        <div className="site-card-wrapper">
-          <Card
-            title="Threshold Power Consumption"
-            bordered={false}
-            bodyStyle={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              fontSize: "16px",
-            }}
-          >
-            <div className="Value-inline">
-              <p>Enter The New Threshold Value</p>
-              <InputNumber
-                min={0}
-                max={100}
-                defaultValue={this.props.threshold.threshold}
+	render() {
+		return (
+			<div className="Threshold-center">
+				<div className="site-card-wrapper">
+					<Card
+						title="Threshold Power Consumption"
+						bordered={false}
+						bodyStyle={{
+							display: "flex",
+							flexDirection: "column",
+							justifyContent: "center",
+							alignItems: "center",
+							fontSize: "16px",
+						}}>
+						<div className="Value-inline">
+							<p>Enter The New Threshold Value</p>
+							<InputNumber
+								min={0}
+								max={100}
+								value={this.state.threshold}
+								// defaultValue={this.state.threshold}
 								onChange={(value) => this.onChange(value)}
-              />
-            </div>
-            <br />
-                
-						<Button type="primary" shape="" htmlType="submit">
+							/>
+						</div>
+						<br />
+
+						<Button
+							type="primary"
+							shape=""
+							htmlType="submit"
+							onClick={() =>
+								this.props.setThreshold(this.state.threshold)
+							}>
 							UPDATE
 						</Button>
 					</Card>
@@ -49,8 +57,8 @@ class Threshold extends Component {
 	}
 }
 
-const mapStateToProps = (state) => ({
+/* const mapStateToProps = (state) => ({
 	threshold: state.threshold,
-});
-
-export default connect(mapStateToProps, { updateThreshold })(Threshold);
+}); */
+export default Threshold;
+// export default connect(mapStateToProps, { updateThreshold })(Threshold);
