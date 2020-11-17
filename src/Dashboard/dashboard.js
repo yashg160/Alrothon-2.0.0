@@ -51,7 +51,6 @@ function Dashboard({ history, usage, fetchUsageData, threshold }) {
 		<React.Fragment>
 			<PageHeader
 				className="site-page-header-responsive"
-				onBack={() => history.goBack()}
 				title="Dashboard"
 				subTitle="Stats At A Glance"
 				extra={[
@@ -74,8 +73,8 @@ function Dashboard({ history, usage, fetchUsageData, threshold }) {
 			</PageHeader>
 			{threshCross
 				? message.error(
-						"Maximum threshold crossed. Please check your power usage."
-				  )
+					"Maximum threshold crossed. Please check your power usage."
+				)
 				: null}
 			{active === "devices" ? (
 				<DevicesContent usage={usage} fetchData={fetchUsageData} />
@@ -433,22 +432,22 @@ function DevicesContent({ fetchData, usage }) {
 						</Card>
 					))
 				) : (
-					""
-				)
+						""
+					)
 			) : (
-				<div>
-					<LeftCircleFilled
-						onClick={() => setActive("devices")}
-						style={{ fontSize: "25px", paddingBottom: "20px" }}
-					/>
-					<DeviceUsageContent
-						device={device}
-						id={active}
-						usage={usage}
-						fetchData={fetchData}
-					/>
-				</div>
-			)}
+					<div>
+						<LeftCircleFilled
+							onClick={() => setActive("devices")}
+							style={{ fontSize: "25px", paddingBottom: "20px" }}
+						/>
+						<DeviceUsageContent
+							device={device}
+							id={active}
+							usage={usage}
+							fetchData={fetchData}
+						/>
+					</div>
+				)}
 		</Card>
 	);
 }
