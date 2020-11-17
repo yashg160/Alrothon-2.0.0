@@ -22,11 +22,30 @@ const { Title, Text } = Typography;
 
 function Dashboard({ history, usage, fetchUsageData, threshold }) {
 	const [active, setActive] = useState("devices");
-
+	const [bill, setBill] = useState(0);
 	const [threshCross, setThreshCross] = useState(false);
 	function showThresholdCross() {
 		setThreshCross(true);
+		setTimeout(() => setThreshCross(false), 2000);
 	}
+
+	const extraContent = (
+		<div
+			style={{
+				display: "flex",
+				width: "max-content",
+				justifyContent: "flex-end",
+			}}>
+			<Statistic
+				title="Status"
+				value="Pending"
+				style={{
+					marginRight: 32,
+				}}
+			/>
+			<Statistic title="Bill" prefix="$" value={bill} />
+		</div>
+	);
 
 	return (
 		<React.Fragment>
@@ -35,7 +54,13 @@ function Dashboard({ history, usage, fetchUsageData, threshold }) {
 				onBack={() => history.goBack()}
 				title="Dashboard"
 				subTitle="Stats At A Glance"
-				extra={[<Button key="1">Log Out</Button>]}
+				extra={[
+					<Button
+						key="1"
+						onClick={() => window.location.replace("/")}>
+						Log Out
+					</Button>,
+				]}
 				footer={
 					<Tabs
 						defaultActiveKey="devices"
@@ -60,6 +85,7 @@ function Dashboard({ history, usage, fetchUsageData, threshold }) {
 					fetchData={fetchUsageData}
 					threshold={threshold}
 					showThresholdCross={showThresholdCross}
+					setBill={(bill) => setBill(bill)}
 				/>
 			) : null}
 		</React.Fragment>
@@ -88,9 +114,11 @@ function UsageContent({ fetchData, usage, threshold, showThresholdCross }) {
 			iteration = 1,
 			lastHourPower = 0;
 		if (!usage.loading) {
+			let bill = 0;
 			for (const stamp of usage.data) {
 				lastHourPower += stamp.energyConsumed;
 				if (iteration % 12 === 0) {
+					bill = bill + lastHourPower * 10;
 					chartValues.push(lastHourPower.toFixed(2));
 					labels.push(labels.length + 1);
 					lastHourPower = 0;
@@ -98,7 +126,7 @@ function UsageContent({ fetchData, usage, threshold, showThresholdCross }) {
 				iteration++;
 				if (lastHourPower > threshold) showThresholdCross();
 			}
-
+			setBill(bill);
 			const maxLine = Array(chartValues.length).fill(threshold);
 			const data = {
 				labels: labels,
@@ -426,24 +454,6 @@ const renderContent = (column = 2) => (
 		{/* <Descriptions.Item label="Creation Time">2017-01-10</Descriptions.Item>
 		<Descriptions.Item label="Effective Time">2017-10-10</Descriptions.Item> */}
 	</Descriptions>
-);
-
-const extraContent = (
-	<div
-		style={{
-			display: "flex",
-			width: "max-content",
-			justifyContent: "flex-end",
-		}}>
-		<Statistic
-			title="Status"
-			value="Pending"
-			style={{
-				marginRight: 32,
-			}}
-		/>
-		<Statistic title="Bill" prefix="$" value={100.08} />
-	</div>
 );
 
 const Content = ({ children, extra }) => {
