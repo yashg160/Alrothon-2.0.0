@@ -265,7 +265,7 @@ function LastMonthBill({ fetchData, usage, setBill }) {
 				if (createdAt.getMonth() === 9) {
 					console.log(createdAt);
 					lastHourPower += stamp.energyConsumed;
-					if (iteration % 4 === 0) {
+					if (iteration % 12 === 0) {
 						bill = bill + lastHourPower * 1;
 						chartValues.push(lastHourPower.toFixed(2));
 						labels.push(labels.length + 1);
