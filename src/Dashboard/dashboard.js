@@ -183,7 +183,7 @@ function UsageContent({ fetchData, usage }) {
 	);
 }
 
-function DevicesContent({}) {
+function DevicesContent({ }) {
 	const [state, setState] = useState({ loading: false, devices: [] });
 	useEffect(() => {
 		getDevices();
@@ -191,16 +191,21 @@ function DevicesContent({}) {
 
 	async function getDevices() {
 		setState({ ...state, loading: true });
-		const rawResponse = await fetch("http://localhost:5000/power/devices");
+		const rawResponse = await fetch("http://localhost:5000/power/device");
 		const response = await rawResponse.json();
 		console.log(response);
-		setState({ ...state, devices: response.data, loading: false });
+		if (response.status == false) {
+			setState({ ...state, devices: null, loading: false });
+		} else {
+			setState({ ...state, devices: response.data, loading: false });
+		}
+
 	}
 
 	if (state.loading) return null;
 	return (
 		<Card title="Your Devices">
-			{state.devices.map((device) => (
+			{state.devices ? state.devices.map((device) => (
 				<Card
 					type="inner"
 					title={<Title level={5}>{device.deviceName}</Title>}
@@ -215,7 +220,7 @@ function DevicesContent({}) {
 					<br />
 					<Text disabled>Device ID {device.deviceId}</Text>
 				</Card>
-			))}
+			)) : ''}
 		</Card>
 	);
 }
