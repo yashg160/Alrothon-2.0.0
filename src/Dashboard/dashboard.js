@@ -98,7 +98,13 @@ const mapStateToProps = (state) => ({
 
 export default connect(mapStateToProps, { fetchUsageData })(Dashboard);
 
-function UsageContent({ fetchData, usage, threshold, showThresholdCross }) {
+function UsageContent({
+	fetchData,
+	usage,
+	threshold,
+	showThresholdCross,
+	setBill,
+}) {
 	const [state, setState] = useState({
 		chartData: null,
 		tableData: [],
@@ -118,7 +124,7 @@ function UsageContent({ fetchData, usage, threshold, showThresholdCross }) {
 			for (const stamp of usage.data) {
 				lastHourPower += stamp.energyConsumed;
 				if (iteration % 12 === 0) {
-					bill = bill + lastHourPower * 10;
+					bill = bill + lastHourPower * 1;
 					chartValues.push(lastHourPower.toFixed(2));
 					labels.push(labels.length + 1);
 					lastHourPower = 0;
