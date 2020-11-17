@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Input, Button } from "antd";
+import { Form, Input, Button, message } from "antd";
 import { Link } from 'react-router-dom'
 import "./Login.css";
 const layout = {
@@ -16,7 +16,9 @@ const tailLayout = {
     span: 16,
   },
 };
-
+async function submit() {
+  message.success('Sucessfully Login');
+}
 const Login = () => {
   const onFinish = (values) => {
     console.log("Success:", values);
@@ -66,7 +68,7 @@ const Login = () => {
           </Form.Item>
 
           <Form.Item {...tailLayout}>
-            <Link to='/dashboard'><Button type="primary" shape="round" htmlType="submit">
+            <Link to='/dashboard'><Button onClick={submit} type="primary" shape="round" htmlType="submit">
               LOGIN
             </Button></Link>
 
