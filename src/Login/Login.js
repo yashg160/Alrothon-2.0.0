@@ -1,5 +1,6 @@
 import React from "react";
 import { Form, Input, Button } from "antd";
+import { Link } from 'react-router-dom'
 import "./Login.css";
 const layout = {
   labelCol: {
@@ -65,9 +66,10 @@ const Login = () => {
           </Form.Item>
 
           <Form.Item {...tailLayout}>
-            <Button type="primary" shape="round" htmlType="submit">
+            <Link to='/dashboard'><Button type="primary" shape="round" htmlType="submit">
               LOGIN
-            </Button>
+            </Button></Link>
+
           </Form.Item>
         </Form>
       </div>
